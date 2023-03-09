@@ -9,6 +9,7 @@ env_logger = "0.10.0"
 log = "0.4.17"
 rpassword = "7.2.0"
 noshell = { git = "https://github.com/eddieKaa/noshell.git", rev = "46c6c29" }
+serde = "1.0.154"
 
 [profile.release]
 strip = true
