@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use serde::de::Deserialize;
 
 /// Setup the logger for the installer
 pub fn setup_logger() {
@@ -31,4 +32,12 @@ pub fn add_value<T: Into<config::Value>>(c: Config, key: impl Into<String>, val:
         .expect("Adding override to configuration failed")
         .build()
         .expect("Failed to build config with new value")
+}
+
+/// Get value from installation configuration
+pub fn get_value<T: Deserialize<'static>>(c: &Config, key: impl Into<String>) -> T {
+    match c.get::<T>(&key.into()) {
+        Ok(v) => v,
+        Err(e) => Error::Config(e.to_string()).handle(),
+    }
 }

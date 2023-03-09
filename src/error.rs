@@ -3,6 +3,7 @@ use crate::prelude::*;
 #[derive(Debug)]
 pub enum Error {
     NoShell(String, String, String),
+    Config(String),
     Generic(String),
 }
 
@@ -15,6 +16,7 @@ impl Error {
                 "NoShell error:\n{}\nCommand: {}\nStderr:\n{}",
                 s, cmd, stderr
             ),
+            Self::Config(s) => error!("Config error:\n{}", s),
             Self::Generic(s) => error!("Generic error:\n{}", s),
         }
 

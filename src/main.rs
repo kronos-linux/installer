@@ -16,3 +16,5 @@ fn main() -> Result<()> {
 
     Ok(exit_success())
 }
+
+mod tests;
