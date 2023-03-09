@@ -8,7 +8,45 @@ pub fn base(bootd: &str, rootd: &str) -> (String, String, String) {
         partition_r(rootd);
     }
 
-    ("".into(), "".into(), "".into())
+    let (bb, esp) = read_boot(bootd);
+    let rd = read_root(rootd);
+
+    debug!("\nBIOS boot: {}\nESP: {}\nRoot partition: {}", bb, esp, rd);
+    (bb, esp, rd)
+}
+
+fn read_boot(target: &str) -> (String, String) {
+    let bootd_result = shrun(&ShellCommand::new("fdisk").args(["-l", target]));
+
+    // Set the BIOS boot and ESP targets
+    let grep_bb = shrun(
+        &ShellCommand::new("grep")
+            .pipe_string(&bootd_result)
+            .args(["BIOS boot"]),
+    );
+    let grep_esp = shrun(
+        &ShellCommand::new("grep")
+            .pipe_string(&bootd_result)
+            .args(["EFI System"]),
+    );
+
+    let bb = Vec::from_iter(grep_bb.split_whitespace())[0].to_string();
+    let esp = Vec::from_iter(grep_esp.split_whitespace())[0].to_string();
+
+    (bb, esp)
+}
+
+fn read_root(target: &str) -> String {
+    let rootd_result = shrun(&ShellCommand::new("fdisk").args(["-l", target]));
+    let grep = shrun(
+        &ShellCommand::new("grep")
+            .pipe_string(&rootd_result)
+            .args(["Linux filesystem"]),
+    );
+
+    let root_part = Vec::from_iter(grep.split_whitespace())[0].to_string();
+
+    root_part
 }
 
 fn partition_rb(target: &str) {
