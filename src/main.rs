@@ -24,6 +24,8 @@ pub fn run_as_root() {
 }
 
 fn main() -> Result<()> {
+    info!("KronOS Installer");
+
     // Logger
     utils::setup_logger();
 
