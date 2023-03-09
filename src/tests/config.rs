@@ -7,6 +7,8 @@ fn creation() {
         .add_source(config::File::with_name("default/config.toml"))
         .build()
         .unwrap();
+
+    let _ = generate_config("default/config.toml");
 }
 
 #[test]

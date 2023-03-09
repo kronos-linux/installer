@@ -4,6 +4,7 @@ use crate::prelude::*;
 pub enum Error {
     NoShell(String, String, String),
     Config(String),
+    Usage(String),
     Generic(String),
 }
 
@@ -17,6 +18,7 @@ impl Error {
                 s, cmd, stderr
             ),
             Self::Config(s) => error!("Config error:\n{}", s),
+            Self::Usage(s) => error!("Usage error:\n{}", s),
             Self::Generic(s) => error!("Generic error:\n{}", s),
         }
 

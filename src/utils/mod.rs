@@ -11,6 +11,31 @@ pub fn setup_logger() {
         .init();
 }
 
+/// Return a config from a target string
+pub fn generate_config(target: &str) -> Config {
+    let c = match Config::builder()
+        .add_source(config::File::with_name(target))
+        .build()
+    {
+        Ok(g) => g,
+        Err(e) => Error::Config(format!("Could not build config:\n{}", e)).handle(),
+    };
+    c
+}
+
+/// Generate a target string from the supplied argument
+pub fn config_target() -> String {
+    let argv: Vec<String> = std::env::args().collect();
+
+    match argv.len() {
+        2 => argv[1].clone(),
+        _ => {
+            let estr1 = "Usage:\n ./installer [path to config.toml]";
+            Error::Usage(estr1.to_string()).handle()
+        }
+    }
+}
+
 /// Run a shell command and stop the installation if there is an error
 pub fn shrun(cmd: &ShellCommand) -> String {
     let cmd_name = String::from(cmd.command());
