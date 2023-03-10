@@ -7,6 +7,8 @@ pub fn root_partition(c: Config) -> Config {
         return add_value(c, "disk.root_container", root_part);
     }
 
+    info!("Encrypting {}", root_part);
+
     let method: String = get_value(&c, "disk.encryption.method");
     if method == "password" {
         let rc = encrypt_pw(&root_part);
@@ -28,12 +30,14 @@ pub fn root_partition(c: Config) -> Config {
 }
 
 fn encrypt_pw(target: &str) -> String {
+    info!("Encrypting {} with password", target);
     let cont = "cryptvol";
     password_encrypt(target, cont);
     "/dev/mapper/".to_string() + cont
 }
 
 fn encrypt_kd(keyd: &str, hostname: &str, target: &str) -> (String, String) {
+    info!("Encrypting {} with keydrive", target);
     shrun(&ShellCommand::new("mkdir").args(["-p", "/tmp/keydrive"]));
     shrun(&ShellCommand::new("mount").args([&keyd, "/tmp/keydrive"]));
     let keyfile = String::from("/") + hostname + ".key";
@@ -66,6 +70,7 @@ fn encrypt_kd(keyd: &str, hostname: &str, target: &str) -> (String, String) {
 
 fn create_keydrive(target: &str, name: &str) -> (String, String) {
     let map = "keydrive";
+    info!("Encrypting {} as the keydrive", target);
 
     let formatter_string = String::from("g\nn\n\n\n+256M\nw\n");
     shrun(
@@ -108,6 +113,7 @@ fn password_encrypt(target: &str, mount: &str) {
     let prompt = format!("Input new password for {} >>: ", target);
     let pw = rpassword::prompt_password(prompt);
     let pw = pw.expect("Failed to prompt for password");
+    info!("Encrypting...");
 
     shrun(&ShellCommand::new("cryptsetup").pipe_string(&pw).args([
         "luksFormat",

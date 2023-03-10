@@ -2,6 +2,7 @@ use crate::prelude::*;
 
 pub fn root_container(c: Config) -> Config {
     let root_container: String = get_value(&c, "disk.root_container");
+    info!("Creating volumes on root container {}", root_container);
 
     shrun(&ShellCommand::new("mkfs.vfat").args([&root_container]));
     shrun(&ShellCommand::new("pvcreate").args(["-f", &root_container]));
@@ -16,6 +17,7 @@ pub fn root_container(c: Config) -> Config {
         Err(e) => Error::Generic(e.to_string()).handle(),
     };
 
+    debug!("Memory detected: {}G", mt);
     let c = add_value(c, "system.memtotal", mt);
 
     if get_value(&c, "disk.swap.enable") {
@@ -35,6 +37,7 @@ pub fn root_container(c: Config) -> Config {
 }
 
 fn create_lvm() -> String {
+    info!("Creating root volume");
     let arg = ["--extents", "100%FREE", "--name", "root", "vg0"];
     shrun(&ShellCommand::new("lvcreate").args(arg));
     "/dev/mapper/vg0-root".into()
@@ -49,6 +52,7 @@ fn create_swapped_lvm(mem: u16) -> (String, String) {
         2 * mem
     };
 
+    info!("Creating swap volume");
     shrun(&ShellCommand::new("lvcreate").args([
         "--size",
         &format!("{}G", swap_size),
@@ -56,6 +60,8 @@ fn create_swapped_lvm(mem: u16) -> (String, String) {
         "swap",
         "vg0",
     ]));
+
+    info!("Creating root volume");
     let arg = ["--extents", "100%FREE", "--name", "root", "vg0"];
     shrun(&ShellCommand::new("lvcreate").args(arg));
     ("/dev/mapper/vg0-root".into(), "/dev/mapper/vg0-swap".into())
