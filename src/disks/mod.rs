@@ -2,6 +2,7 @@ use crate::prelude::*;
 
 mod encrypt;
 mod partition;
+mod volume;
 
 pub fn configure(c: Config) -> Config {
     info!("Configuring the disks");
@@ -14,6 +15,7 @@ pub fn configure(c: Config) -> Config {
     let c = add_value(c, "disk.root_partition", rp);
 
     let c = encrypt::root_partition(c);
+    let c = volume::root_container(c);
 
     c
 }
