@@ -24,6 +24,8 @@ pub fn run_as_root() {
 }
 
 fn main() -> Result<()> {
+    info!("KronOS Installer");
+
     // Logger
     utils::setup_logger();
 
@@ -34,6 +36,11 @@ fn main() -> Result<()> {
     let t = utils::config_target();
     let c = utils::generate_config(&t);
     report_config(&c);
+
+    // Attempt to to proceed with the install
+    match ShellCommand::new("vgremove").args(["-f", "vg0"]).run() {
+        _ => debug!("Attempted to remove vg0"),
+    }
 
     // Given a set of targets and configuration options, the disk configuration
     // is going to partition, format and mount disks such that the space onto
