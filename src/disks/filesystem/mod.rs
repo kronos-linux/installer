@@ -13,7 +13,7 @@ pub fn configure(c: Config) -> Config {
         ext4::format(&root_volume);
         return c;
     } else if fs == "btrfs" {
-        let c = btrfs::format(c);
+        let c = btrfs::format(&root_volume, c);
         return c;
     } else {
         Error::Config("Improper filesystem supplied in config".into()).handle()
