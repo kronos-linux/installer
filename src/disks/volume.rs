@@ -38,7 +38,7 @@ pub fn root_container(c: Config) -> Config {
 
 fn create_lvm() -> String {
     info!("Creating root volume");
-    let arg = ["--extents", "100%FREE", "--name", "root", "vg0"];
+    let arg = ["-y", "--extents", "100%FREE", "--name", "root", "vg0"];
     shrun(&ShellCommand::new("lvcreate").args(arg));
     "/dev/mapper/vg0-root".into()
 }
@@ -54,6 +54,7 @@ fn create_swapped_lvm(mem: u16) -> (String, String) {
 
     info!("Creating swap volume");
     shrun(&ShellCommand::new("lvcreate").args([
+        "-y",
         "--size",
         &format!("{}G", swap_size),
         "--name",
@@ -62,7 +63,7 @@ fn create_swapped_lvm(mem: u16) -> (String, String) {
     ]));
 
     info!("Creating root volume");
-    let arg = ["--extents", "100%FREE", "--name", "root", "vg0"];
+    let arg = ["-y", "--extents", "100%FREE", "--name", "root", "vg0"];
     shrun(&ShellCommand::new("lvcreate").args(arg));
     ("/dev/mapper/vg0-root".into(), "/dev/mapper/vg0-swap".into())
 }
