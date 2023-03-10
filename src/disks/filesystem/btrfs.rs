@@ -52,3 +52,9 @@ pub fn format(target: &str, c: Config) -> Config {
 
     c
 }
+
+pub fn mount(target: &str, c: &Config) {
+    info!("Mounting root filesystem");
+    let mountopts: String = get_value(c, "filesystem.mountopts");
+    shrun(&ShellCommand::new("mount").args(["-o", &mountopts, target, "/mnt/gentoo"]));
+}
