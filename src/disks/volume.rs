@@ -22,7 +22,7 @@ pub fn root_container(c: Config) -> Config {
 
     if get_value(&c, "disk.swap.enable") {
         let (vol, swap) = create_swapped_lvm(get_value(&c, "system.memtotal"));
-        let c = add_value(c, "disk.swap.volume", swap);
+        let c = add_value(c, "disk.swap_volume", swap);
         let c = add_value(c, "disk.root_volume", vol);
 
         shrun(&ShellCommand::new("vgchange").args(["--available", "y"]));
