@@ -1,5 +1,6 @@
 use crate::prelude::*;
 
+mod btrfs;
 mod ext4;
 
 pub fn configure(c: Config) -> Config {
@@ -10,10 +11,11 @@ pub fn configure(c: Config) -> Config {
 
     if fs == "ext4" {
         ext4::format(&root_volume);
+        return c;
     } else if fs == "btrfs" {
-        ()
+        let c = btrfs::format(&root_volume, c);
+        return c;
     } else {
         Error::Config("Improper filesystem supplied in config".into()).handle()
     }
-    c
 }
