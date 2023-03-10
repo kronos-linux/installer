@@ -1,5 +1,6 @@
 use crate::prelude::*;
 
+mod encrypt;
 mod partition;
 
 pub fn configure(c: Config) -> Config {
@@ -11,6 +12,8 @@ pub fn configure(c: Config) -> Config {
     let c = add_value(c, "disk.bb", bb);
     let c = add_value(c, "disk.esp", esp);
     let c = add_value(c, "disk.root_partition", rp);
+
+    let c = encrypt::root_partition(c);
 
     c
 }
