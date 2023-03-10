@@ -1,6 +1,7 @@
 use crate::prelude::*;
 
 mod encrypt;
+mod filesystem;
 mod partition;
 mod volume;
 
@@ -16,6 +17,7 @@ pub fn configure(c: Config) -> Config {
 
     let c = encrypt::root_partition(c);
     let c = volume::root_container(c);
+    let c = filesystem::configure(c);
 
     c
 }
