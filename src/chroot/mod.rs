@@ -34,6 +34,8 @@ fn prepare(c: &Config) {
     dns_info();
 
     mounts::relevant();
+
+    zram();
 }
 
 fn execute(c: &Config) {
@@ -53,11 +55,57 @@ fn execute(c: &Config) {
     if get_value(c, "disk.swap.enable") {
         let t: String = get_value(c, "disk.swap_volume");
         swap(&t);
-        zswap();
     }
+    zswap();
+}
+
+fn zram() {
+    match ShellCommand::new("modprobe")
+        .args(["zram", "num_devices=2"])
+        .run()
+    {
+        Ok(_) => info!("Creating zram for temporary filesystems"),
+        Err(_) => {
+            warn!("Zram module not found");
+            return;
+        }
+    }
+
+    let mut zr0_comp = OpenOptions::new()
+        .read(true)
+        .write(true)
+        .open("/sys/block/zram0/comp_algorithm")
+        .expect("Failed to open zram controls");
+    let mut zr1_comp = OpenOptions::new()
+        .read(true)
+        .write(true)
+        .open("/sys/block/zram1/comp_algorithm")
+        .expect("Failed to open zram controls");
+    write!(zr0_comp, "zstd").expect("Failedto write to zram controls");
+    write!(zr1_comp, "zstd").expect("Failedto write to zram controls");
+
+    let mut zr0_ds = OpenOptions::new()
+        .read(true)
+        .write(true)
+        .open("/sys/block/zram0/disksize")
+        .expect("Failed to open zram controls");
+    let mut zr1_ds = OpenOptions::new()
+        .read(true)
+        .write(true)
+        .open("/sys/block/zram1/disksize")
+        .expect("Failed to open zram controls");
+    write!(zr0_ds, "16G").expect("Failedto write to zram controls");
+    write!(zr1_ds, "16G").expect("Failedto write to zram controls");
+
+    shrun(&ShellCommand::new("mkfs.ext4").args(["/dev/zram0"]));
+    shrun(&ShellCommand::new("mkfs.ext4").args(["/dev/zram1"]));
+
+    shrun(&ShellCommand::new("mount").args(["/dev/zram0", "/mnt/gentoo/tmp"]));
+    shrun(&ShellCommand::new("mount").args(["/dev/zram1", "/mnt/gentoo/var/tmp"]));
 }
 
 fn zswap() {
+    info!("Enabling zswap");
     let mut zs_enable = OpenOptions::new()
         .read(true)
         .write(true)
@@ -76,7 +124,7 @@ fn zswap() {
         .open("/sys/module/zswap/parameters/zpool")
         .expect("Could not open zswap enable");
 
-    write!(zs_compress, "lz4").expect("Could not set lz4 as compressor");
+    write!(zs_compress, "zstd").expect("Could not set lz4 as compressor");
     write!(zs_alloc, "z3fold").expect("Could not set z3fold as allocator");
     write!(zs_enable, "1").expect("Could not enable zswap");
 
