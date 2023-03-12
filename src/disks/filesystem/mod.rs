@@ -9,6 +9,8 @@ pub fn configure(c: Config) -> Config {
     let root_volume: String = get_value(&c, "disk.root_volume");
     let fs: String = get_value(&c, "filesystem.type");
 
+    shrun(&ShellCommand::new("mkdir").args(["-p", "/mnt/gentoo"]));
+
     if fs == "ext4" {
         ext4::format(&root_volume);
         ext4::mount(&root_volume);
