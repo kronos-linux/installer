@@ -1,12 +1,13 @@
 use crate::prelude::*;
 
-use std::{cmp::min, fs::File, io::Write};
+use std::{cmp::min, fs::File, io::Write, os::unix::fs};
 
 mod download;
 mod mounts;
 
 pub fn configure(c: Config) -> Config {
     prepare(&c);
+    execute(&c);
     c
 }
 
@@ -28,6 +29,24 @@ fn prepare(c: &Config) {
     dns_info();
 
     mounts::relevant();
+}
+
+fn execute(c: &Config) {
+    fs::chroot("/mnt/gentoo").expect("Chroot failed");
+    std::env::set_current_dir("/").expect("Directory change failed");
+
+    debug!(
+        "Inside chroot:\n{}",
+        shrun(&ShellCommand::new("ls").args(["-lah"]))
+    );
+
+    info!("Mounting boot partition");
+    let target: String = get_value(c, "disk.esp");
+
+    shrun(&ShellCommand::new("mount").args([&target, "/boot"]));
+
+    // zswap();
+    // zram();
 }
 
 fn dns_info() {
