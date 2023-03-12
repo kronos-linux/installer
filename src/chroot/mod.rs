@@ -1,6 +1,11 @@
 use crate::prelude::*;
 
-use std::{cmp::min, fs::File, io::Write, os::unix::fs};
+use std::{
+    cmp::min,
+    fs::{File, OpenOptions},
+    io::Write,
+    os::unix::fs,
+};
 
 mod download;
 mod mounts;
@@ -45,8 +50,50 @@ fn execute(c: &Config) {
 
     shrun(&ShellCommand::new("mount").args([&target, "/boot"]));
 
-    // zswap();
-    // zram();
+    if get_value(c, "disk.swap.enable") {
+        let t: String = get_value(c, "disk.swap_volume");
+        swap(&t);
+        zswap();
+    }
+}
+
+fn zswap() {
+    let mut zs_enable = OpenOptions::new()
+        .read(true)
+        .write(true)
+        .open("/sys/module/zswap/parameters/enabled")
+        .expect("Could not open zswap enable");
+
+    let mut zs_compress = OpenOptions::new()
+        .read(true)
+        .write(true)
+        .open("/sys/module/zswap/parameters/compressor")
+        .expect("Could not open zswap enable");
+
+    let mut zs_alloc = OpenOptions::new()
+        .read(true)
+        .write(true)
+        .open("/sys/module/zswap/parameters/zpool")
+        .expect("Could not open zswap enable");
+
+    write!(zs_compress, "lz4").expect("Could not set lz4 as compressor");
+    write!(zs_alloc, "z3fold").expect("Could not set z3fold as allocator");
+    write!(zs_enable, "1").expect("Could not enable zswap");
+
+    debug!(
+        "ZSwap enabled:\n{}",
+        shrun(&ShellCommand::new("grep").args(["-R", ".", "/sys/module/zswap/parameters"]))
+    );
+}
+
+fn swap(target: &str) {
+    info!("Enabling swap");
+    shrun(&ShellCommand::new("mkswap").args([target]));
+    shrun(&ShellCommand::new("swapon").args([target]));
+    debug!(
+        "Swap enabled:\n{}",
+        shrun(&ShellCommand::new("swapon").args(["--show"]))
+    );
 }
 
 fn dns_info() {
