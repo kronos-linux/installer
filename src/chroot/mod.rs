@@ -21,7 +21,7 @@ fn prepare(c: &Config) {
         Err(_) => Error::Generic("Failed to change directory".into()).handle(),
         _ => (),
     }
-    let gui_enable = get_value(c, "gui.enabled");
+    let gui_enable = get_value(c, "gui.enable");
 
     let target = download::get_s3_string(gui_enable);
     let target_asc = target.clone() + ".asc";
