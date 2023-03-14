@@ -13,7 +13,7 @@ pub fn configure(c: Config) -> Config {
 
     portage::configure();
 
-    locale::configure();
+    locale::configure(&c);
 
     mirrors::configure();
 

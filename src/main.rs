@@ -62,7 +62,12 @@ fn main() -> Result<()> {
 
     // Exit
     report_config(&c);
+    cleanup();
     Ok(exit_success())
+}
+
+fn cleanup() {
+    shrun(&ShellCommand::new("sync"));
 }
 
 fn report_config(c: &Config) {

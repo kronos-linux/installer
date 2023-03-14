@@ -2,7 +2,7 @@
 
 rm -rf .build/release && mkdir -p .build/release
 
-cargo test --release
+cargo test --quiet 2>/dev/null
 cargo build --release
 
 cp target/release/installer .build/release
