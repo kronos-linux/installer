@@ -2,7 +2,7 @@
 
 rm -rf .build/debug && mkdir -p .build/debug
 
-cargo test
+cargo test 2>/dev/null
 cargo build
 
 cp target/debug/installer .build/debug/installer

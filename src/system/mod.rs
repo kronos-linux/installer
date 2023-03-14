@@ -2,22 +2,19 @@ use crate::prelude::*;
 
 mod fstab;
 mod locale;
-mod mirrors;
 mod networking;
 mod portage;
 mod sysutils;
 mod update;
 
-pub fn configure(c: Config) -> Config {
+pub fn configure(c: Config) -> (Config, std::thread::JoinHandle<()>) {
     fstab::configure(&c);
 
-    portage::configure();
+    let msj = portage::configure();
 
     locale::configure(&c);
 
-    mirrors::configure();
-
-    sysutils::install();
+    sysutils::install(&c);
 
     sysutils::configure();
 
@@ -25,5 +22,5 @@ pub fn configure(c: Config) -> Config {
 
     update::configure();
 
-    c
+    (c, msj)
 }

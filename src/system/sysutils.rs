@@ -2,4 +2,4 @@ use crate::prelude::*;
 
 pub fn configure() {}
 
-pub fn install() {}
+pub fn install(c: &Config) {}
