@@ -18,9 +18,9 @@ pub fn configure(c: Config) -> (Config, Vec<std::thread::JoinHandle<()>>) {
 
     sysutils::install(&c);
 
-    sysutils::configure();
+    sysutils::configure(&c);
 
-    networking::configure();
+    networking::configure(&c);
 
     (c, vec![upj, msj])
 }
