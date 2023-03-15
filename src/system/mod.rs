@@ -7,12 +7,14 @@ mod portage;
 mod sysutils;
 mod update;
 
-pub fn configure(c: Config) -> (Config, std::thread::JoinHandle<()>) {
+pub fn configure(c: Config) -> (Config, Vec<std::thread::JoinHandle<()>>) {
     fstab::configure(&c);
 
     let msj = portage::configure();
 
     locale::configure(&c);
+
+    let upj = update::configure();
 
     sysutils::install(&c);
 
@@ -20,7 +22,5 @@ pub fn configure(c: Config) -> (Config, std::thread::JoinHandle<()>) {
 
     networking::configure();
 
-    update::configure();
-
-    (c, msj)
+    (c, vec![upj, msj])
 }

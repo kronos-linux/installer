@@ -55,23 +55,25 @@ fn main() -> Result<()> {
     let c = chroot::configure(c);
 
     // Configure the system. Including gui installation
-    let (c, ms_join) = system::configure(c);
+    let (c, joins) = system::configure(c);
 
     // Install the kernel, initramfs and bootloader. Configure them accordingly
     let c = boot::configure(c);
 
     // Exit
     report_config(&c);
-    cleanup(ms_join);
+    cleanup(joins);
     Ok(exit_success())
 }
 
-fn cleanup(j: std::thread::JoinHandle<()>) {
+fn cleanup(joins: Vec<std::thread::JoinHandle<()>>) {
     info!("Cleaning up after installation");
-    match j.join() {
-        Ok(_) => (),
-        Err(_) => warn!("Failed to join mirrorselect thread"),
-    };
+    for j in joins {
+        match j.join() {
+            Ok(_) => (),
+            Err(_) => warn!("Failed to join mirrorselect thread"),
+        };
+    }
     shrun(&ShellCommand::new("sync"));
 }
 

@@ -27,7 +27,7 @@ fn sync_repo() {
 }
 
 fn mirrors() {
-    let mirrors = shrun(&ShellCommand::new("mirrorselect").args(["-D", "-b25", "-s3", "-o"]))
+    let mirrors = shrun(&ShellCommand::new("mirrorselect").args(["-D", "-b10", "-s3", "-o"]))
         .replace("\n", "");
 
     let mut file = OpenOptions::new()
