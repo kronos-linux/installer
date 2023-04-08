@@ -8,8 +8,9 @@ config = "0.13.3"
 env_logger = "0.10.0"
 log = "0.4.17"
 rpassword = "7.2.0"
-noshell = { git = "https://github.com/eddieKaa/noshell.git", rev = "46c6c29" }
+noshell = { git = "https://git.temp.hyprlab.net/Kaa/noshell.git", rev = "46c6c29" }
 serde = "1.0.154"
+clap = { version = "4.1.13", features = ["derive"] }
 
 [profile.release]
 strip = true
