@@ -1,6 +1,9 @@
 use crate::prelude::*;
 
-use std::{fs::OpenOptions, io::Write};
+use std::{
+    fs::{File, OpenOptions},
+    io::Write,
+};
 
 pub fn configure(c: &Config) {
     let mut hosts = OpenOptions::new()
@@ -10,6 +13,13 @@ pub fn configure(c: &Config) {
         .expect("Failed to open hosts file");
 
     let hostname: String = get_value(c, "hostname");
+
+    writeln!(
+        File::create("/etc/hostname").expect("Failed to create hostname file"),
+        "{}",
+        &hostname
+    )
+    .expect("Failed to write hostname");
 
     let ipv4 = format!("127.0.0.1       {}            localhost\n", hostname);
     let ipv6 = format!("::1             {}            localhost\n", hostname);
