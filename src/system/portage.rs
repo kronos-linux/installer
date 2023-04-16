@@ -4,6 +4,9 @@ use std::{fs::OpenOptions, io::Write, thread};
 
 pub fn configure() -> thread::JoinHandle<()> {
     info!("Configuring portage");
+
+    setup_wget();
+
     sync_repo();
 
     info!("Updating make.conf");
@@ -15,6 +18,16 @@ pub fn configure() -> thread::JoinHandle<()> {
     restructure_portage_dir();
     cpuflags();
     thread::spawn(|| mirrors())
+}
+
+fn setup_wget() {
+    let mut wgrc = OpenOptions::new()
+        .write(true)
+        .append(true)
+        .open("/etc/wgetrc")
+        .expect("Could not open wgetrc");
+
+    write!(wgrc, "\nprefer-family = IPv4\n").expect("Failed to write to wgetrc");
 }
 
 fn sync_repo() {

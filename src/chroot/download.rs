@@ -13,7 +13,7 @@ pub fn get_s3_string(gui: bool) -> String {
         "stage3-amd64-desktop-openrc-[0-9]*T[0-9]*Z.tar.xz"
     };
 
-    let a = ["https://distfiles.gentoo.org/releases/amd64/autobuilds/current-stage3-amd64-desktop-openrc", "-O", "-"];
+    let a = ["--prefer-family=IPv4", "https://distfiles.gentoo.org/releases/amd64/autobuilds/current-stage3-amd64-desktop-openrc", "-O", "-"];
 
     let wget = shrun(&ShellCommand::new("wget").args(a));
     let grep = shrun(
@@ -30,8 +30,8 @@ pub fn stage3(t: &str, tasc: &str) {
     let cd = current_dir().expect("Failed to get running directory");
     set_current_dir(Path::new("/mnt/gentoo")).expect("Failed directory change /mnt/gentoo");
 
-    shrun(&ShellCommand::new("wget").args(["https://distfiles.gentoo.org/releases/amd64/autobuilds/current-stage3-amd64-desktop-openrc/".to_owned()+&t]));
-    shrun(&ShellCommand::new("wget").args(["https://distfiles.gentoo.org/releases/amd64/autobuilds/current-stage3-amd64-desktop-openrc/".to_owned()+&tasc]));
+    shrun(&ShellCommand::new("wget").args(["--prefer-family=IPv4".to_string(), "https://distfiles.gentoo.org/releases/amd64/autobuilds/current-stage3-amd64-desktop-openrc/".to_owned()+&t]));
+    shrun(&ShellCommand::new("wget").args(["--prefer-family=IPv4".to_string(), "https://distfiles.gentoo.org/releases/amd64/autobuilds/current-stage3-amd64-desktop-openrc/".to_owned()+&tasc]));
     debug!("Latest stage3 archive downloaded");
 
     let ls = shrun(&ShellCommand::new("ls").args(["-lah"]));
