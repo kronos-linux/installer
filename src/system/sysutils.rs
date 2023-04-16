@@ -36,6 +36,27 @@ pub fn install(c: &Config) {
     write!(p_use, "{}{}{}", htop_lm, dash, lvm).expect("Failed to write package.use");
 
     shrun(&ShellCommand::new("emerge").args(args));
+
+    add_kronological();
+    tetrahedron_install();
+}
+
+fn tetrahedron_install() {
+    shrun(&ShellCommand::new("emerge").args(["-vnq", "sys-apps/tetrahedron"]));
+}
+
+fn add_kronological() {
+    info!("Adding Kronological repository");
+
+    shrun(&ShellCommand::new("eselect").args([
+        "repository",
+        "add",
+        "kronological",
+        "git",
+        "https://git.temp.hyprlab.net/KRONOS/kronological.git",
+    ]));
+
+    shrun(&ShellCommand::new("emaint").args(["-r", "kronological", "sync"]));
 }
 
 fn get_utils(gui: bool) -> Vec<String> {

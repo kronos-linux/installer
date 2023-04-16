@@ -57,24 +57,27 @@ fn main() -> Result<()> {
     // Configure the system. Including gui installation
     let (c, joins) = system::configure(c);
 
+    // wait for all threads
+    wait(joins);
+
     // Install the kernel, initramfs and bootloader. Configure them accordingly
     let c = boot::configure(c);
 
     // Exit
     report_config(&c);
-    cleanup(joins);
+
+    info!("Cleaning up after installation");
+    shrun(&ShellCommand::new("sync"));
     Ok(exit_success())
 }
 
-fn cleanup(joins: Vec<std::thread::JoinHandle<()>>) {
-    info!("Cleaning up after installation");
+fn wait(joins: Vec<std::thread::JoinHandle<()>>) {
     for j in joins {
         match j.join() {
             Ok(_) => (),
             Err(_) => warn!("Failed to join mirrorselect thread"),
         };
     }
-    shrun(&ShellCommand::new("sync"));
 }
 
 fn report_config(c: &Config) {
