@@ -6,7 +6,7 @@ mod kernel;
 
 pub fn configure(c: Config) -> Config {
     initramfs::configure();
-    kernel::configure(&c);
+    kernel::configure();
     bootloader::configure(&c);
 
     c
