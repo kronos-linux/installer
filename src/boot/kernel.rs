@@ -13,7 +13,7 @@ pub fn configure() {
     shrun(&ShellCommand::new("emerge").args([
         "-vq",
         "sys-kernel/linux-firmware",
-        "sys-kernel/gentoo-sources",
+        "=sys-kernel/gentoo-sources-6.1.19",
     ]));
 
     info!("Compiling kernel");
