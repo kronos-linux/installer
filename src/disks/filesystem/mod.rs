@@ -9,6 +9,8 @@ pub fn configure(c: Config) -> Config {
     let root_volume: String = get_value(&c, "disk.root_volume");
     let fs: String = get_value(&c, "filesystem.type");
 
+    format_esp(&c);
+
     shrun(&ShellCommand::new("mkdir").args(["-p", "/mnt/gentoo"]));
 
     if fs == "ext4" {
@@ -22,4 +24,10 @@ pub fn configure(c: Config) -> Config {
     } else {
         Error::Config("Improper filesystem supplied in config".into()).handle()
     }
+}
+
+fn format_esp(c: &Config) {
+    let esp: String = get_value(c, "disk.esp");
+
+    shrun(&ShellCommand::new("mkfs.vfat").args(["-F32", &esp]));
 }

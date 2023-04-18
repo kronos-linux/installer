@@ -22,5 +22,11 @@ pub fn configure(c: Config) -> (Config, Vec<std::thread::JoinHandle<()>>) {
 
     networking::configure(&c);
 
+    root_passwd();
+
     (c, vec![upj, msj])
+}
+
+fn root_passwd() {
+    shrun(&ShellCommand::new("passwd").args(["-de", "root"]));
 }
