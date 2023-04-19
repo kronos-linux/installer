@@ -42,7 +42,7 @@ pub fn install(c: &Config) {
 }
 
 fn tetrahedron_install() {
-    shrun(&ShellCommand::new("emerge").args(["-vnq", "sys-apps/tetrahedron"]));
+    shrun(&ShellCommand::new("emerge").args(["-vnq", "dev-lang/rust-bin", "sys-apps/tetrahedron"]));
 }
 
 fn add_kronological() {
