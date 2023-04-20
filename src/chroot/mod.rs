@@ -1,11 +1,6 @@
 use crate::prelude::*;
 
-use std::{
-    cmp::min,
-    fs::{File, OpenOptions},
-    io::Write,
-    os::unix::fs,
-};
+use std::{cmp::min, fs::File, io::Write, os::unix::fs};
 
 mod download;
 mod mounts;
@@ -34,8 +29,6 @@ fn prepare(c: &Config) {
     dns_info();
 
     mounts::relevant();
-
-    zram();
 }
 
 fn execute(c: &Config) {
@@ -56,6 +49,8 @@ fn execute(c: &Config) {
         let t: String = get_value(c, "disk.swap_volume");
         swap(&t);
     }
+
+    zram();
     zswap();
 }
 
@@ -71,31 +66,27 @@ fn zram() {
         }
     }
 
-    let mut zr0_comp = OpenOptions::new()
-        .read(true)
-        .write(true)
-        .open("/sys/block/zram0/comp_algorithm")
-        .expect("Failed to open zram controls");
-    let mut zr1_comp = OpenOptions::new()
-        .read(true)
-        .write(true)
-        .open("/sys/block/zram1/comp_algorithm")
-        .expect("Failed to open zram controls");
-    write!(zr0_comp, "zstd").expect("Failedto write to zram controls");
-    write!(zr1_comp, "zstd").expect("Failedto write to zram controls");
+    write!(
+        File::create("/sys/block/zram0/comp_algorithm").expect("Failed to open zram controls"),
+        "zstd"
+    )
+    .expect("Failedto write to zram controls");
+    write!(
+        File::create("/sys/block/zram1/comp_algorithm").expect("Failed to open zram controls"),
+        "zstd"
+    )
+    .expect("Failedto write to zram controls");
 
-    let mut zr0_ds = OpenOptions::new()
-        .read(true)
-        .write(true)
-        .open("/sys/block/zram0/disksize")
-        .expect("Failed to open zram controls");
-    let mut zr1_ds = OpenOptions::new()
-        .read(true)
-        .write(true)
-        .open("/sys/block/zram1/disksize")
-        .expect("Failed to open zram controls");
-    write!(zr0_ds, "16G").expect("Failedto write to zram controls");
-    write!(zr1_ds, "16G").expect("Failedto write to zram controls");
+    write!(
+        File::create("/sys/block/zram0/disksize").expect("Failed to open zram controls"),
+        "16G"
+    )
+    .expect("Failedto write to zram controls");
+    write!(
+        File::create("/sys/block/zram1/disksize").expect("Failed to open zram controls"),
+        "16G"
+    )
+    .expect("Failedto write to zram controls");
 
     shrun(&ShellCommand::new("mkfs.ext4").args(["/dev/zram0"]));
     shrun(&ShellCommand::new("mkfs.ext4").args(["/dev/zram1"]));
@@ -105,28 +96,30 @@ fn zram() {
 }
 
 fn zswap() {
-    info!("Enabling zswap");
-    let mut zs_enable = OpenOptions::new()
-        .read(true)
-        .write(true)
-        .open("/sys/module/zswap/parameters/enabled")
-        .expect("Could not open zswap enable");
+    match ShellCommand::new("modprobe").args(["zswap"]).run() {
+        Ok(_) => info!("Enabling ZSwap"),
+        Err(_) => {
+            warn!("ZSwap module not found");
+            return;
+        }
+    }
 
-    let mut zs_compress = OpenOptions::new()
-        .read(true)
-        .write(true)
-        .open("/sys/module/zswap/parameters/compressor")
-        .expect("Could not open zswap enable");
-
-    let mut zs_alloc = OpenOptions::new()
-        .read(true)
-        .write(true)
-        .open("/sys/module/zswap/parameters/zpool")
-        .expect("Could not open zswap enable");
-
-    write!(zs_compress, "zstd").expect("Could not set lz4 as compressor");
-    write!(zs_alloc, "z3fold").expect("Could not set z3fold as allocator");
-    write!(zs_enable, "1").expect("Could not enable zswap");
+    write!(
+        File::create("/sys/module/zswap/parameters/compressor")
+            .expect("Could not open zswap enable"),
+        "zstd"
+    )
+    .expect("Could not set lz4 as compressor");
+    write!(
+        File::create("/sys/module/zswap/parameters/zpool").expect("Could not open zswap enable"),
+        "z3fold"
+    )
+    .expect("Could not set z3fold as allocator");
+    write!(
+        File::create("/sys/module/zswap/parameters/enabled").expect("Could not open zswap enable"),
+        "1"
+    )
+    .expect("Could not enable zswap");
 
     debug!(
         "ZSwap enabled:\n{}",
@@ -163,16 +156,11 @@ fn make_conf() {
         .replace("\n", "")
         .parse()
         .expect("Failed to detect CPU count");
-    let lsmem = shrun(&ShellCommand::new("lsmem"));
-    let mem = shrun(
-        &ShellCommand::new("grep")
-            .args(["Total online memory"])
-            .pipe_string(lsmem),
-    );
+    let free = shrun(&ShellCommand::new("free").args(["-g"]));
     let mem: u16 = shrun(
-        &ShellCommand::new("grep")
-            .pipe_string(mem)
-            .args(["-om1", "[0-9]*"]),
+        &ShellCommand::new("awk")
+            .args(["FNR==2 {print $2}"])
+            .pipe_string(free),
     )
     .replace("\n", "")
     .parse()
@@ -181,6 +169,8 @@ fn make_conf() {
     if mem <= 1 {
         Error::Generic("Insufficient memory to continue installation".into()).handle::<()>();
     }
+
+    let mem = mem + 1;
 
     debug!("Found CPUs: {}", nproc);
     debug!("Found memory: {}", mem);
