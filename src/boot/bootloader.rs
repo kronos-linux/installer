@@ -70,5 +70,11 @@ fn build_kcmd(c: &Config) -> String {
         kcmd_args
     };
 
+    let kcmd_args = if get_value(c, "disk.discard.enable") {
+        kcmd_args + SEP + "irfs.root_dev_discard=true"
+    } else {
+        kcmd_args
+    };
+
     kcmd_args
 }
