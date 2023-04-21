@@ -55,10 +55,7 @@ fn main() -> Result<()> {
     let c = chroot::configure(c);
 
     // Configure the system. Including gui installation
-    let (c, joins) = system::configure(c);
-
-    // wait for all threads
-    wait(joins);
+    let c = system::configure(c);
 
     // Install the kernel, initramfs and bootloader. Configure them accordingly
     let c = boot::configure(c);
@@ -69,15 +66,6 @@ fn main() -> Result<()> {
     info!("Cleaning up after installation");
     shrun(&ShellCommand::new("sync"));
     Ok(exit_success())
-}
-
-fn wait(joins: Vec<std::thread::JoinHandle<()>>) {
-    for j in joins {
-        match j.join() {
-            Ok(_) => (),
-            Err(_) => warn!("Failed to join mirrorselect thread"),
-        };
-    }
 }
 
 fn report_config(c: &Config) {

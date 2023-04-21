@@ -6,8 +6,9 @@ mod networking;
 mod portage;
 mod sysutils;
 mod update;
+mod users;
 
-pub fn configure(c: Config) -> (Config, Vec<std::thread::JoinHandle<()>>) {
+pub fn configure(c: Config) -> Config {
     fstab::configure(&c);
 
     let msj = portage::configure();
@@ -24,7 +25,20 @@ pub fn configure(c: Config) -> (Config, Vec<std::thread::JoinHandle<()>>) {
 
     root_passwd();
 
-    (c, vec![upj, msj])
+    wait(vec![upj, msj]);
+
+    users::configure(&c);
+
+    c
+}
+
+fn wait(joins: Vec<std::thread::JoinHandle<()>>) {
+    for j in joins {
+        match j.join() {
+            Ok(_) => (),
+            Err(_) => warn!("Failed to join mirrorselect thread"),
+        };
+    }
 }
 
 fn root_passwd() {
