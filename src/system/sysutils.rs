@@ -24,6 +24,7 @@ pub fn configure(c: &Config) {
     }
 
     doas_conf();
+    zram_conf();
 
     if gui {
         shrun(&ShellCommand::new("rc-update").args(["add", "NetworkManager", "default"]));
@@ -64,6 +65,28 @@ pub fn install(c: &Config) {
 
     add_kronological();
     tetrahedron_install();
+}
+
+fn zram_conf() {
+    let start = include_str!("resources/zram.start.sh");
+    let stop = include_str!("resources/zram.stop.sh");
+
+    writeln!(
+        File::create("/etc/local.d/zram.start").expect("Failed to create zram.start"),
+        "{}",
+        start
+    )
+    .expect("Failed to write to zram.start");
+
+    writeln!(
+        File::create("/etc/local.d/zram.stop").expect("Failed to create zram.stop"),
+        "{}",
+        stop
+    )
+    .expect("Failed to write to zram.stop");
+
+    shrun(&ShellCommand::new("chmod").args(["744", "/etc/local.d/zram.start"]));
+    shrun(&ShellCommand::new("chmod").args(["744", "/etc/local.d/zram.stop"]));
 }
 
 fn doas_conf() {
