@@ -23,14 +23,18 @@ pub fn configure(c: &Config) {
         snapper_conf("root");
     }
 
-    doas_conf();
-    zram_conf();
-
     if gui {
         shrun(&ShellCommand::new("rc-update").args(["add", "NetworkManager", "default"]));
     } else {
         shrun(&ShellCommand::new("rc-update").args(["add", "dhcpcd", "default"]));
     }
+
+    doas_conf();
+    zram_conf();
+    if get_value(c, "disk.discard.enable") {
+        trim_conf();
+    }
+    cgroups_conf();
 }
 
 pub fn install(c: &Config) {
@@ -67,6 +71,30 @@ pub fn install(c: &Config) {
     tetrahedron_install();
 }
 
+fn trim_conf() {
+    let trim = include_str!("resources/trim.stop.sh");
+
+    writeln!(
+        File::create("/etc/local.d/trim.stop").expect("Failed to create trim.stop"),
+        "{}",
+        trim
+    )
+    .expect("Failed to write to zram.stop");
+
+    shrun(&ShellCommand::new("chmod").args(["744", "/etc/local.d/trim.stop"]));
+}
+
+fn cgroups_conf() {
+    shrun(&ShellCommand::new("sed").args([
+        "-i",
+        "-e",
+        "s|^#rc_cgroup_mode=\".*\"|rc_cgroup_mode=\"unified\"|g",
+        "-e",
+        "s|^#rc_cgroup_controllers=\".*\"|rc_cgroup_controllers=\"cpuset cpu io memory hugetlb pids\"|g",
+        "/etc/rc.conf",
+    ]));
+}
+
 fn zram_conf() {
     let start = include_str!("resources/zram.start.sh");
     let stop = include_str!("resources/zram.stop.sh");
@@ -95,6 +123,16 @@ fn doas_conf() {
         "permit :wheel"
     )
     .expect("Failed to write to doas.conf");
+
+    writeln!(
+        File::options()
+            .write(true)
+            .append(true)
+            .open("/etc/skel/.bashrc")
+            .expect("Failed to open skel bashrc"),
+        "\ncomplete -cf doas"
+    )
+    .expect("Failed to write to skel bashrc");
 }
 
 fn snapper_setup() {
@@ -159,6 +197,7 @@ fn get_utils(gui: bool) -> Vec<String> {
         "www-client/links",
         "sys-process/nmon",
         "app-shells/dash",
+        "app-shells/bash-completion",
         "sys-process/htop",
         "net-analyzer/bmon",
         "app-editors/neovim",
