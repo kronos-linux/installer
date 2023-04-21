@@ -23,6 +23,8 @@ pub fn configure(c: &Config) {
         snapper_conf("root");
     }
 
+    doas_conf();
+
     if gui {
         shrun(&ShellCommand::new("rc-update").args(["add", "NetworkManager", "default"]));
     } else {
@@ -64,6 +66,14 @@ pub fn install(c: &Config) {
     tetrahedron_install();
 }
 
+fn doas_conf() {
+    writeln!(
+        File::create("/etc/doas.conf").expect("Failed to open doas.conf"),
+        "permit :wheel"
+    )
+    .expect("Failed to write to doas.conf");
+}
+
 fn snapper_setup() {
     match ShellCommand::new("rc-service")
         .args(["dbus", "start"])
@@ -75,7 +85,7 @@ fn snapper_setup() {
     shrun(&ShellCommand::new("snapper").args(["-c", "root", "create-config", "/"]));
 }
 
-fn snapper_conf(tconf: &str) {
+pub fn snapper_conf(tconf: &str) {
     shrun(&ShellCommand::new("sed").args([
         "-i",
         "-e",
@@ -144,7 +154,7 @@ fn get_utils(gui: bool) -> Vec<String> {
         "sys-fs/dosfstools",
         "sys-fs/btrfs-progs",
         "sys-fs/ntfs3g",
-        "app-portage/layman",
+        "app-admin/doas",
         "app-eselect/eselect-repository",
         "app-portage/gentoolkit",
         "dev-vcs/git",
