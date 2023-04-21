@@ -1,8 +1,5 @@
 use crate::prelude::*;
-use std::{
-    fs::{File, OpenOptions},
-    io::Write,
-};
+use std::{fs::File, io::Write};
 
 pub fn configure(c: &Config) {
     info!("Updating locales and timezone");
@@ -16,21 +13,29 @@ pub fn configure(c: &Config) {
 }
 
 fn timezone(zone: &str) {
-    let mut file = File::create("/etc/timezone").expect("Could not open /etc/timezone");
-    write!(file, "{}\n", zone).expect("Could not write timezone");
+    write!(
+        File::create("/etc/timezone").expect("Could not open /etc/timezone"),
+        "{}\n",
+        zone
+    )
+    .expect("Could not write timezone");
 
     shrun(&ShellCommand::new("emerge").args(["--config", "sys-libs/timezone-data"]));
     debug!("Timezone updated")
 }
 
 fn locales(l: &Vec<String>) {
-    let mut file = OpenOptions::new()
-        .write(true)
-        .append(true)
-        .open("/etc/locale.gen")
-        .expect("Could not open locale.gen");
     for loc in l {
-        write!(file, "{}\n", loc).expect("Failed to update locale.gen");
+        write!(
+            File::options()
+                .write(true)
+                .append(true)
+                .open("/etc/locale.gen")
+                .expect("Could not open locale.gen"),
+            "{}\n",
+            loc
+        )
+        .expect("Failed to update locale.gen");
     }
     shrun(&ShellCommand::new("locale-gen"));
     debug!("Locales generated");
